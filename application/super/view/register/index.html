@@ -1,0 +1,278 @@
+{include file="header"}
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/common.css" />
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/super_register.css" />
+<div class="vue_box">
+
+	<h3>维修员注册</h3>
+	<div class="order_box">
+		<!--表单信息填写-->
+		<b-form method="POST" id="registerInfo" action="{:url('register')}">
+			<!--秘钥-->
+			<b-form-group>
+				<label class="control-label" for="key">秘钥</label>
+				<b-form-input placeholder="请输入电脑门诊部维修员注册专用秘钥" id="key" name="key"></b-form-input>
+			</b-form-group>
+			<!--姓名-->
+			<b-form-group>
+				<label class="control-label" for="ad_name">姓名</label>
+				<b-form-input placeholder="请输入您的姓名" id="ad_name" name="ad_name"></b-form-input>
+			</b-form-group>
+			<!--学号-->
+			<b-form-group>
+				<label class="control-label" for="ad_uid">学号</label>
+				<b-form-input placeholder="请输入您的学号" id="ad_uid" name="ad_uid"></b-form-input>
+			</b-form-group>
+			<!--密码-->
+			<b-form-group>
+				<label class="control-label" for="ad_password">密码</label>
+				<b-form-input type="password" placeholder="请输入您的密码" id="ad_password" name="ad_password"></b-form-input>
+			</b-form-group>
+			<!--再次输入密码-->
+			<b-form-group>
+				<label class="control-label" for="ad_password">再次输入密码</label>
+				<b-form-input type="password" placeholder="请再一次输入您的密码" id="ad_passwords" name="ad_passwords"></b-form-input>
+			</b-form-group>
+			<!--密码找回问题-->
+			<b-form-group>
+				<label class="control-label" for="ad_problem">密码找回的问题</label>
+				<b-form-input placeholder="用于找回密码的问题" id="ad_problem" name="ad_problem"></b-form-input>
+			</b-form-group>
+			<!--密码找回答案-->
+			<b-form-group>
+				<label class="control-label" for="ad_answer">密码找回的答案</label>
+				<b-form-input placeholder="用于找回密码的答案" id="ad_answer" name="ad_answer"></b-form-input>
+			</b-form-group>
+	
+			<!--班级-->
+			<b-form-group>
+				<label class="control-label" for="ad_classname">班级</label>
+				<b-form-input placeholder="请输入您的班级，如：H15软件工程B班" id="ad_classname" name="ad_classname"></b-form-input>
+			</b-form-group>
+			<!--联系电话-->
+			<b-form-group>
+				<label class="control-label" for="ad_phone">联系电话</label>
+				<b-form-input placeholder="请输入您的联系号码" id="ad_phone" name="ad_phone"></b-form-input>
+			</b-form-group>
+			<!--微信号-->
+			<b-form-group>
+				<label class="control-label" for="ad_wx">微信号</label>
+				<b-form-input placeholder="请输入您的微信号" id="ad_wx" name="ad_wx"></b-form-input>
+			</b-form-group>
+			<!--验证码-->
+			<b-form-group>
+				<label class="control-label" for="captcha">验证码</label>
+				<b-form-input placeholder="请输入正确的验证码" id="captcha" name="captcha"></b-form-input>
+				
+			</b-form-group>	
+			
+			<!--操作按钮-->
+			<div class="updateBtn">
+				<div><img :src="captcha_src" @click="change()" alt="captcha" class="captcha_box"/></div>
+				<b-button variant="primary" type="submit">注册</b-button>
+				<b-button variant="danger" href="{:url('login/index')}">返回</b-button>
+			</div>
+		</b-form>
+
+	</div>
+</div>
+
+<script type="text/javascript">
+	new Vue({
+		el: ".vue_box",
+		data: {
+			captcha_src:"{:captcha_src()}"
+		},
+		methods: {
+			//改变验证码
+			change:function(){
+				this.captcha_src += "?code="+Math.random(10000);
+			}
+		}
+	})
+</script>
+<script type="text/javascript">
+	//	表单验证
+	$(function() {
+		$('#registerInfo').bootstrapValidator({
+			//检验提示　　　　　　
+			message: 'This value is not valid',
+			feedbackIcons: {　　　　　　　　
+				valid: 'glyphicon glyphicon-ok',
+　　　　　　　　invalid: 'glyphicon glyphicon-remove',
+　　　　　　　　validating: 'glyphicon glyphicon-refresh'　　　　　　　　
+			},
+			//            字段验证
+			fields: {
+				// 秘钥
+				key: {
+					message: '秘钥非法',
+					validators: {
+						//                        非空
+						notEmpty: {
+							message: '秘钥不能为空'
+						},
+						
+					}
+				},
+				//                姓名
+				ad_name: {
+					message: '姓名非法',
+					validators: {
+						//                        非空
+						notEmpty: {
+							message: '姓名不能为空'
+						},
+						//                       基于正则表达是的验证
+						regexp: {
+							regexp: /^([\u4e00-\u9fa5]{2,5})$/,
+							message: '姓名为2-5位中文'
+						}
+					}
+				},
+
+				//                学号
+				ad_uid: {
+					message: '学号非法',
+					validators: {
+						notEmpty: {
+							message: '学号不能为空'
+						},
+						//                        基于正则表达是的验证
+						regexp: {
+							regexp: /^1[0-9]{10}$/,
+							message: '学号为1开头，长度为11位'
+						}
+					}
+				},
+				
+				//密码
+				ad_password:{
+					message:'密码非法',
+					validators:{
+						notEmpty:{
+							message:'密码不能为空'
+						},
+						regexp:{
+							regexp:/^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,16}$/,
+							message:'密码由6-16位数字和字母的组合'
+						}
+					}
+				},
+				//再次输入密码
+				ad_passwords:{
+					message:'密码非法',
+					validators:{
+						identical:{
+							field:'ad_password',
+							message:'两次密码不一致'
+						},
+						notEmpty:{
+							message:'密码不能为空'
+						},
+						
+					}
+				},
+				//密码找回的问题
+				ad_problem: {
+					validators: {
+						//非空
+						notEmpty: {
+							message: '密码找回的问题不能为空'
+						},
+						//长度
+						stringLength: {
+							min: 1,
+							max: 10,
+							message: '密码找回的问题长度必须位于1到16之间'
+						}
+					}
+				},
+				//密码找回的答案
+				ad_answer: {
+					validators: {
+						//非空
+						notEmpty: {
+							message: '密码找回的答案不能为空'
+						},
+						//长度
+						stringLength: {
+							min: 1,
+							max: 16,
+							message: '密码找回的答案长度必须位于1到16之间'
+						}
+					}
+				},
+				//                班级
+				ad_classname: {
+					message: '班级非法',
+					validators: {
+						notEmpty: {
+							message: '班级不能为空'
+						},
+						//                        基于正则表达是的验证
+						regexp: {
+							regexp: /^H1[0-9]\S+班$/,
+							message: '班级格式错误，如H15软件工程B班'
+						},
+						//验证长度
+						stringlength: {
+							min: 5,
+							max: 12,
+							message: '班级名称长度为5-12'
+						},
+					}
+				},
+				//				  手机号码
+				ad_phone: {
+					validators: {
+						notEmpty: {
+							message: '手机号码不能为空'
+						},
+						//                      长度
+						stringlength: {
+							min: 11,
+							max: 11,
+							message: '请输入11位手机号码'
+						},
+						//                         基于正则表达是的验证
+						regexp: {
+							regexp: /^1[3|5|8]{1}[0-9]{9}$/,
+							message: '请输入正确的手机号码'
+						}
+					}
+				},
+				//               微信号
+				ad_wx: {
+					message: '微信号非法',
+					validators: {
+						//                  	非空
+						notEmpty: {
+							message: '微信号不能为空'
+						},
+						//                        基于正则表达是的验证
+						regexp: {
+							regexp: /^[a-zA-Z]{1}[-_a-zA-Z0-9]{5,19}$/,
+							message: '微信号由数6-20个字母、数字、下划线或减号组成，以字母开头'
+						}
+					}
+				},
+				//验证码
+				captcha: {
+					validators: {
+						//非空
+						notEmpty: {
+							message: '验证码不能为空'
+						},					
+					}
+				},
+
+				
+
+				
+
+			}
+		})
+
+	});
+</script>
+{include file="footer"}

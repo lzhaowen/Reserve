@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>电脑门诊部咨询室</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="https://cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+		<script src="https://cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+		<script src="https://cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="http://120.79.235.191:2183/socket.io/socket.io.js"></script>
+		<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/chatlogin.css" />
+		<link href="https://cdn.bootcss.com/bootstrap-validator/0.5.3/css/bootstrapValidator.min.css" rel="stylesheet">
+		<script src="https://cdn.bootcss.com/bootstrap-validator/0.5.3/js/bootstrapValidator.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<script src="https://cdn.bootcss.com/vue-resource/1.5.0/vue-resource.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/common.css" />
+		
+	</head>
+
+	<body>
+		<div class="vue_box">
+			<!--名字输入框-->
+			<div id="username">
+				<div id="namebox">
+					<h4>【电脑门诊部咨询室】</h4>
+					<div class="form-group">
+						<label for="classname">班级</label><br/>
+						<input class="form-control" type="text" id="classname" name="classname" placeholder="请输入您的班级" />
+					</div>
+					<div class="form-group">
+						<label for="usernamein">名称</label><br/>
+						<input class="form-control" type="text" id="usernamein" name="usernamein" placeholder="请输入您的名称" />
+					</div>
+					<!--验证码-->
+					<div class="form-group">
+						<label for="captcha2">验证码</label>
+						<input class="form-control" placeholder="请输入正确的验证码" id="captcha" name="captcha"></input>
+					</div>
+					<div><img :src="captcha_src" @click="change()" class="captcha_box" /></div>
+					<p id="error"></p>
+					<a class="btn btn-danger btnSure" href="{:url('user/index/index')}">返回</a>
+					<button class="btn btn-primary btnSure" id="btnSure" @click="login()">进入</button>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			new Vue({
+				el: '.vue_box',
+				data: {
+					captcha_src: "{:captcha_src()}", //验证码图片
+				},
+				methods: {
+					//登陆
+					login: function() {
+						//查看输入是否按要求输入，并将班级、姓名存入本地
+						if(classname.value.match(/^H1[0-9]\S+班$/) !== null && usernamein.value.match(/^([\u4e00-\u9fa5]{2,5})$/) !== null) {
+							//后台验证			
+							this.$http.post("{:url('chatlogin/save')}", {
+								captcha: captcha.value,
+								classname:classname.value,
+								username:usernamein.value,
+							}).then(function(data){
+								//跳转
+								if(data.body == "ok") {
+									window.location.href = "{:url('chat/chat')}";
+								} else if(data.body == "captcha") {
+									error.innerHTML = "验证码错误";
+									this.change();
+								}
+							})
+						} else {
+							//输入有错误
+							alert("请按要求填写正确的信息");
+						}
+					},
+					//改变验证码
+					change:function(){
+						this.captcha_src += "?code="+Math.random(10000);
+					},
+				}
+			})
+
+			//	表单验证
+			$(function() {
+				$('#namebox').bootstrapValidator({
+					//检验提示　　　　　　
+					message: 'This value is not valid',
+					feedbackIcons: {　　　　　　　　
+						valid: 'glyphicon glyphicon-ok',
+						　　　　　　　　invalid: 'glyphicon glyphicon-remove',
+						　　　　　　　　validating: 'glyphicon glyphicon-refresh'　　　　　　　　
+					},
+					//            字段验证
+					fields: {
+						//                姓名
+						usernamein: {
+							message: '姓名非法',
+							validators: {
+								//                        非空
+								notEmpty: {
+									message: '姓名不能为空'
+								},
+								//                       基于正则表达是的验证
+								regexp: {
+									regexp: /^([\u4e00-\u9fa5]{2,5})$/,
+									message: '姓名为2-5位中文'
+								}
+							}
+						},
+
+						//                班级
+						classname: {
+							message: '班级非法',
+							validators: {
+								notEmpty: {
+									message: '班级不能为空'
+								},
+								//                        基于正则表达是的验证
+								regexp: {
+									regexp: /^H1[0-9][\u4e00-\u9fa5]{2,}[a-eA-E]{0,1}班$/,
+									message: '班级格式错误，如H15软件工程B班，H要大写，要写班'
+								},
+								//验证长度
+								stringlength: {
+									min: 5,
+									max: 12,
+									message: '班级名称长度为5-12'
+								},
+							}
+						},
+
+//						验证码
+						captcha: {
+							validators: {
+							
+								notEmpty: {
+									message: '验证码不能为空'
+								},
+
+							}
+						},
+
+					},
+				})
+
+			})
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,157 @@
+{include file="header"}
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/common.css" />
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/super_login.css" />
+<div class="vue_box">
+
+	<h3>维修员登录</h3>
+	<form method="POST" id="reserveInfo" action="">
+		<!--学号-->
+		<div class="form-group">
+			<label class="control-label" for="ad_uid">学号</label>
+			<input class="form-control" placeholder="请输入您的学号" v-model="ad_uid" id="ad_uid" name="ad_uid"/>
+		</div>
+
+		<!--密码-->
+		<div class="form-group">
+			<label class="control-label" for="ad_password">密码</label>
+			<input class="form-control" type="password" placeholder="请输入您的密码" v-model="ad_password" id="ad_password" name="ad_password"/>
+			<div>
+				<a class="forget_btn" href="{:url('findpassword')}">忘记密码？</a>
+			</div>
+		</div>
+		
+		<!--验证码-->
+		<div class="form-group">
+			<label class="control-label" for="captcha">验证码</label>
+			<input class="form-control" placeholder="请输入正确的验证码" id="captcha" name="captcha" v-model="captcha"/>
+		</div>
+		
+		<!--登录错误信息-->
+		<div class="error"> </div>
+
+		<div class="updateBtn">
+			<div><img :src="captcha_src" @click="change()" class="captcha_box" /></div>
+			<button class="btn btn-primary" type="button" @click="login()">登录</button>
+			<a class="btn btn-danger" href="{:url('super/Register/index')}">注册</a>
+			<a class="btn btn-warning" href="{:url('user/index/index')}">返回</a>
+		</div>
+
+	</form>
+
+</div>
+
+<script type="text/javascript">
+	var vue = new Vue({
+		el: ".vue_box",
+		data: {
+			ad_uid: null, //学号
+			ad_password: null, //密码
+			captcha: null, //验证码		
+			captcha_src: "{:captcha_src()}", //验证码图片
+		},
+		watch: {
+			ad_uid: function() {
+				$(".error").text(" ")
+			},
+			ad_password: function() {
+				$(".error").text(" ")
+			},
+			captcha: function() {
+				$(".error").text(" ")
+			}
+		},
+
+		methods: {
+			//登录
+			login: function() {
+				this.$http.post("{:url('login')}", {
+					ad_uid: this.ad_uid,
+					ad_password: this.ad_password,
+					captcha: this.captcha
+				}).then(function(data){
+					switch(data.body) {
+						case 0:
+							$(".error").text("输入的内容不能为空");
+							this.change();
+							break;
+						case 1:
+							$(".error").text("输入的验证码错误");
+							this.change();
+							break;
+						case 2:
+							$(".error").text("输入的学号或者密码错误");
+							this.change();
+							break;
+						default:
+							location.href = "{:url('super/index/index')}";
+					}
+				});
+			},
+
+			//改变验证码
+			change: function() {
+				this.captcha_src += "?code=" + Math.random(10000);
+			}
+
+		}
+	})
+</script>
+<script type="text/javascript">
+	$(function() {
+		$('#reserveInfo').bootstrapValidator({
+				//检验提示　　　　　　
+				message: 'This value is not valid',
+				feedbackIcons: {　　　　　　　　
+					valid: 'glyphicon glyphicon-ok',
+					　　　　　　　　invalid: 'glyphicon glyphicon-remove',
+					　　　　　　　　validating: 'glyphicon glyphicon-refresh'　　　　　　　　
+				},
+
+				//            字段验证
+				fields: {
+
+					//学号
+					ad_uid: {
+						message: '学号非法',
+						validators: {
+							notEmpty: {
+								message: '学号不能为空'
+							},
+							//                        基于正则表达是的验证
+							regexp: {
+								regexp: /^1[0-9]{10}$/,
+								message: '学号为1开头，长度为11位'
+							}
+						}
+					},
+					//密码
+					ad_password: {
+						message: '密码非法',
+						validators: {
+							//                        非空
+							notEmpty: {
+								message: '密码不能为空'
+							},
+
+						}
+					},
+					//验证码
+					captcha: {
+						validators: {
+							//非空
+							notEmpty: {
+								message: '验证码不能为空'
+							},
+						}
+					},
+
+				}
+			}) //submit提交成功
+			.on('success.form.bv', function(e) {
+				e.preventDefault()
+				vue.login();
+			})
+
+	});
+</script>
+{include file="footer"}

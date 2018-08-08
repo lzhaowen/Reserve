@@ -1,0 +1,96 @@
+{include file="header"}
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/common.css" />
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/problem_index.css" />
+
+<div class="vue_box">
+	<div class="info_page">
+
+	
+	<div id="header">
+		<h3>常见电脑问题查询</h3>
+		<a href="{:url('index/index')}" id="back"><img src="__ADMIN_PUBLIC__/static/image/back.png"/> 返回</a>				
+		
+		<form method="post">
+			<div class="form-group">
+				<input class="form-control" id="problem_input" v-model="problem" placeholder="请输入您电脑问题描述的关键词"></input>
+				<button type="button" class="btn btn-primary" @click="query_problem" id="find"><img src="__ADMIN_PUBLIC__/static/image/find.png"/></button>
+
+			</div>
+		</form>
+	</div>
+	
+	<!--标题信息控件-->
+	<div :class="'panel-success panel list'+index" v-for="(list,index) in pro_list">
+		<div :aria-controls="'collapse'+index" :href="'#collapse'+index" role="button" data-toggle="collapse" data-parent="#accordion" class="panel-heading" role="tab" :id="'heading'+index">	
+			<h4 class="panel-title">					
+	        <div id="">
+		         {{list.problem}}
+	         </div>
+	    		</h4>
+		</div>
+		<!--内容-->
+		<div :id="'collapse'+index" class="panel-collapse collapse" role="tabpanel" :aria-labelledby="'heading'+index">
+			<div class="panel-body">
+				<b>解决方法：</b>	
+				<ul>
+					<li v-for="answerList in JSON.parse(list.answer)">{{answerList}}</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div class="error_msg" v-if="pro_pages.total==0">对不起，常见问题库没有查询到相应的关键词</br>建议预约维修</div>
+	<!--分页导航-->
+	<div class="page_nav" v-if="pro_pages.total!=0">
+		<b-pagination size="md" :total-rows="pro_pages.total" v-model="pr_current_page" :per-page="pro_pages.per_page"></b-pagination>
+	</div>  
+
+	</div>
+</div>
+
+
+<script type="text/javascript">
+	new Vue({
+		el:'.vue_box',
+		data:{
+			problem:'',
+			pr_current_page:1,
+			pro_list:{$pro_list},
+			pro_pages:{$pro_pages},
+		},
+		watch:{
+			problem:function(){
+				if(this.problem==''){
+					this.query_problem();
+				}
+			},
+			
+			//监控管理员名单当前页变化
+			pr_current_page: function(page){
+				this.$http.get("{:url('index')}?page="+page) 
+				.then(function(data){					
+					data = data.body;
+					this.pro_list = data.msg[0];
+					this.pro_pages = data.msg[1];
+					$('.panel-collapse').removeClass('in');
+				});			
+			},
+		},
+		methods:{
+			query_problem:function(){
+				var vague = '%'+this.problem.trim()+'%';
+				this.$http.post("{:url('Problemquery/query')}",{
+					problem:vague,
+				}).then(function(data){
+					data = data.body;
+//					console.log(data);
+					this.pro_list = data.msg[0];
+					this.pro_pages = data.msg[1];
+					$('.panel-collapse').removeClass('in');	
+					
+				})
+			}
+		}
+	})
+</script>
+
+{include file="footer"}

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>电脑门诊部咨询室</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="https://cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+		<script src="https://cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+		<script src="https://cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="http://120.79.235.191:2183/socket.io/socket.io.js"></script>
+
+		<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/chat.css" />
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<script src="https://cdn.bootcss.com/vue-resource/1.5.0/vue-resource.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/common.css" />
+		
+	</head>
+
+	<body>
+
+		<div class="box">
+			<a id="back" href="{:url('user/index/index')}">预约</a>
+			<span id="quit" @click="quit()">退出</span>
+			<h3>电脑门诊部咨询室</h3>
+
+			<!--用户框-->
+			<p id="onlinebtn" @click="online()">点击查看在线用户</p>
+			<div class="userNode" id="userNode">
+				<ol id="ol"></ol>
+			</div>
+
+			<!--聊天框-->
+			<div class="textNode" id="textNode">
+				<ul id="ul"></ul>
+
+			</div>
+			<div id="logintip">文明用语、禁止刷屏、禁止广告</div>
+
+			<!--内容输入框-->
+			<div id="bottom">
+				<textarea class="form-control" id="txtNode" maxlength="180" placeholder="请输入您要发送的内容，最大长度：180" @keyup.enter="enterMsg()"></textarea>
+				<button class="btn btn-primary" id="btn" @click="btnMsg()">发送</button>
+			</div>
+		</div>
+
+		<script type="text/javascript">
+			new Vue({
+				el: '.box',
+				data: {
+					userInput: {$username},
+				},
+				created: function() {
+					var that = this;
+					//链接服务器
+					window.conn = io.connect('ws://120.79.235.191:2183');
+					//向后台发送该用户输入的名字
+					conn.emit('name', that.userInput);
+					//浏览器重复打开
+					conn.on('repeat', function(str){
+						//已有聊天室窗口则自动关闭新窗口
+						if(str == 'yes') {
+							alert("你在另一页面已登陆，该页面即将关闭，手机端请退出后登陆");
+							$('#logintip').html("你已断线，请重新登陆");
+							window.opener = null;
+							window.open('', '_self');
+							window.close();
+							conn.emit('repeatback', 'yes');
+						}
+					})
+
+					//获取后台传过来的自己、其他用户的名字
+					conn.on('user', function(arr){
+						//清空在线列表
+						ol.innerHTML = '';
+						//重新获取列表
+						for(var i = 0; i < arr.length; i++) {
+							var oLi = document.createElement('li');
+							oLi.innerHTML = arr[i];
+							ol.appendChild(oLi);
+						}
+					})
+
+					//显示用户进入咨询室
+					conn.on('userin', function(username){
+						var str = "欢迎 <b>" + username + "</b> 进入咨询室"
+						$('#logintip').html(str);
+						that.tips();
+					})
+
+					//获取后台传过来的其他用户发送的信息
+					conn.on('msg', function(json){
+						//发送名字、发送时间、发送内容
+						ul.appendChild(that.toli(json.userName, json.timer, json.msg));
+						textNode.scrollTop = textNode.scrollHeight - 300;
+					});
+
+					//获取后台传过来的自己发送的信息
+					conn.on('mymsg', function(json){
+						//发送名字、发送时间、发送内容
+						ul.appendChild(that.toli(json.userName, json.timer, json.msg, 'my'));
+						textNode.scrollTop = textNode.scrollHeight - 300;
+					});
+
+					//获取登陆前发送过的信息
+					conn.on('allmsg', function(arr){
+						for(var i = 0; i < arr.length; i++) {
+							if(arr[i].userName == that.userInput) {
+								ul.appendChild(that.toli(arr[i].userName, arr[i].timer, arr[i].msg, "my"));
+							} else {
+								ul.appendChild(that.toli(arr[i].userName, arr[i].timer, arr[i].msg));
+							}
+						}
+						textNode.scrollTop = textNode.scrollHeight - 300;
+					});
+
+					//其他用户退出
+					conn.on('userup', function(str){
+						var msg = "<b>" + str + "</b> 退出咨询室"
+						$('#logintip').html(msg);
+						that.tips();
+						for(var i = 0; i < ol.children.length; i++) {			
+							if(ol.children[i].innerHTML == str) {
+								ol.children[i].remove();
+							}
+						}
+					});
+					
+					//自己退出
+					conn.on('myup', function(str){
+						$('#logintip').html("你已断线，请重新登陆");
+						for(var i = 0; i < ol.children.length; i++) {			
+							ol.children[i].remove();					
+						}
+						alert("你已断线，请重新登陆");
+					});
+				},
+				methods: {
+					//显示在线用户
+					online: function() {
+						$('#userNode').slideToggle('fast');
+					},
+					//发送消息
+					toli: function(user, timer, inn, classPool) {
+						var oLi = document.createElement('li');
+						oLi.className = classPool;
+						oLi.innerHTML = "<p>"+user+" "+timer+"</p><p>"+inn+"</p>" ;			
+						return oLi;
+					},
+					//恢复默认提示
+					tips: function() {
+						clearTimeout(timer);
+						var timer = setTimeout(function(){
+							var str = "文明用语、禁止刷屏、禁止广告";
+							$('#logintip').html(str);
+						}, 3000)
+					},
+					//消息处理
+					emitMeg: function() {
+						if($.trim($('#txtNode').val()).length > 0) {
+							if($.trim($('#txtNode').val()).length > 180) {
+								alert("输入内容长度超出180，请重新输入");
+							} else {
+								conn.emit('msg', txtNode.value);
+								txtNode.value = "";
+							}
+						} else {
+							alert("发送内容不能为空");
+						}
+					},
+					//回车发送信息			
+					enterMsg: function() {
+						this.emitMeg();
+						txtNode.value = "";
+					},
+					//按钮发送消息到后台
+					btnMsg: function() {
+						this.emitMeg();
+					},
+					//退出登陆
+					quit: function() {
+						this.$http.post("{:url('chat/quit')}").then(function(data){
+							window.location.href = "{:url('chatlogin/chatlogin')}";
+						})
+					}
+				}
+			})
+		</script>
+	</body>
+
+</html>

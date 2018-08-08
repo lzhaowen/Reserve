@@ -1,0 +1,82 @@
+{include file="header"}
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/common.css" />
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/user_order.css" />
+<div class="vue_box">
+	<!--预约成功提示-->
+	<div v-if="orderStatue==1" class="hideInfo">
+		<div class="card_box">
+			<div class="title">温馨提示</div>
+			<div class="content">
+				<p>恭喜你，预约成功</p>
+				<p>1、维修地点在{$seat}</p>
+				<p>2、维修时间预约当天晚上的{$sbeginTime}点-{$sendTime}点</p>
+				<p>3、前往维修请带上鼠标和充电器</p>
+				<p>4、只接受非硬件方面的维修，并且维修是免费的</p>
+				<p>5、预约仅当天可用，若今天预约没能到，请重新预约</p>
+				<p></p>
+			</div>
+		</div>
+	</div>
+	
+	<!--预约失败提示-->
+	<div v-if="orderStatue==0" class="hideInfo">
+		<div class="card_box">
+			<div class="title">温馨提示</div>
+			<div class="content text-center ">
+				<p>不好意思，预约名额已满，请下次预约</p>
+				<p>预约时间为第{$beginSchoolWeek}-{$endSchoolWeek}周，周{$beginWeek}到周{$endWeek}，{$beginTimeH}-{$endTimeH}</p>
+			</div>
+		</div>
+	</div>
+	
+	<!--重复提示-->
+	<div v-if="orderStatue==2" class="hideInfo">
+		<div class="card_box">
+			<div class="title">温馨提示</div>
+			<div class="content text-center">
+				<p>你已预约成功，请勿重复提交</p>
+			</div>
+		</div>
+	</div>
+	
+	
+	<!--学号为空提示-->
+	<div v-if="orderStatue==3" class="hideInfo">
+		<div class="card_box">
+			<div class="title">温馨提示</div>
+			<div class="content text-center">
+				<p>填写内容不能为空，请重新预约</p>
+			</div>
+		</div>
+	</div>
+	
+	<!--验证码错误提示-->
+	<div v-if="orderStatue==4" class="hideInfo">
+		<div class="card_box">
+			<div class="title">温馨提示</div>
+			<div class="content text-center">
+				<p>验证码错误，请重新预约</p>
+			</div>
+		</div>
+	</div>
+	
+	<div class="returnBtn hideInfo">
+		<a class="btn btn-primary" href="{:url('index')}">返回首页</a>	
+	</div>
+</div>
+
+<script type="text/javascript">
+	$(".hideInfo").show()
+	//	console.log(window.location.search)
+	new Vue({
+		el: ".vue_box",
+		data: {
+			orderStatue: {$orderStatue},
+		},
+		methods:{
+			
+		}
+	})
+</script>
+
+{include file="footer"}

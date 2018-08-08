@@ -1,0 +1,81 @@
+{include file="header"}
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/common.css" />
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/register_result.css" />
+
+<div class="vue_box">
+	<!--重复注册-->
+	<div id="" v-if="result==0" class="hideInfo">
+		<div class="card_box">
+			<div class="title">注册失败</div>
+			<div class="content">
+				<p>你已经注册，请勿重复注册</p>			
+			</div>			
+		</div>
+		
+	</div>
+	
+	
+	
+	<!--成功注册-->
+	<div id="" v-if="result==1" class="hideInfo">
+		<div class="card_box">
+			<div class="title">注册成功</div>
+			<div class="content">
+				<p>恭喜你成为电脑门诊部的维修员</p>			
+			</div>
+		</div>
+		
+	</div>
+	
+	<!--密钥错误-->
+	<div id="" v-if="result==2" class="hideInfo">
+		<div class="card_box">
+			<div class="title">注册失败</div>
+			<div class="content">
+				<p>您所输入的注册秘钥错误</p>			
+			</div>
+		</div>
+		
+	</div>
+	
+	<!--填写信息为空-->
+	<div id="" v-if="result==3" class="hideInfo">
+		<div class="card_box">
+			<div class="title">注册失败</div>
+			<div class="content">
+				<p>您所输入的信息不能为空</p>			
+			</div>
+		</div>	
+	</div>
+	
+	<!--验证码错误-->
+	<div id="" v-if="result==4" class="hideInfo">
+		<div class="card_box">
+			<div class="title">注册失败</div>
+			<div class="content">
+				<p>您所输入的验证码错误</p>			
+			</div>
+		</div>	
+	</div>
+	
+	
+	<div class="btn_box">
+		<b-button class="returnBtn" variant="info" v-if="result==1 || result==0" href="{:url('login/index')}">返回登录</b-button>
+		<b-button class="returnBtn" variant="primary" v-if="result==3|| result==2 || result==0 ||result==4" href="{:url('super/Register/index')}">返回注册</b-button>	
+		<b-button class="returnBtn" variant="danger"  v-if="result==0" href="{:url('login/findpassword')}">找回密码</b-button>
+	</div>
+</div>
+
+<script type="text/javascript">
+	$(".hideInfo").show()
+	new Vue({
+		el: '.vue_box',
+		data: {
+			result: {$result}
+		},
+		methods: {
+
+		}
+	})
+</script>
+{include file="footer"}

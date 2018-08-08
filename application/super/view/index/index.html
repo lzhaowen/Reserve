@@ -1,0 +1,1122 @@
+{include file="header"}
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/common.css" />
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/super_index.css" />
+<!--日期选择器-->
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/bootstrap-datetimepicker.css" />
+<script type="text/javascript" src="__ADMIN_PUBLIC__/static/js/bootstrap-datetimepicker.js"></script>	
+
+<!--时间选择器-->
+<link href="https://cdn.bootcss.com/bootstrap-timepicker/0.5.2/css/bootstrap-timepicker.min.css" rel="stylesheet">
+<script src="https://cdn.bootcss.com/bootstrap-timepicker/0.5.2/js/bootstrap-timepicker.min.js"></script>
+
+<!--Mint-ui ,操作提示-->
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/mint-ui.css" />
+<script type="text/javascript" src="__ADMIN_PUBLIC__/static/js/mint-ui.js"></script>
+
+
+<div class="vue_box">
+	<div class="content">
+		<!--页面信息-->
+		<h3 class="title">电脑门诊部-后台管理系统</h3>
+		<div class="admin_info hideInfo" >{{admin_name}}，欢迎您</div>
+		
+		<!--退出控件-->
+		<div class="exit">
+			<a  href="{:url('user/index/index')}">返回首页</a>
+			<a  @click="chatin()" id="chatin">咨询室</a>
+			<a  href="{:url('exitUid')}">退出登录</a>
+		</div>
+	
+		<!--超级管理员操作控件-->
+		<div id="operate" class="hideInfo">
+			<ul class="nav nav-tabs row " role="tablist">			
+				<li role="presentation" class="active">
+					<a href="#reserve_page" aria-controls="reserve_page" role="tab" data-toggle="tab">预约订单</a>
+				</li>
+				<li role="presentation">
+					<a href="#admin_page" aria-controls="admin_page" role="tab" data-toggle="tab">维修员名单</a>
+				</li>			
+				<li role="presentation" >
+					<a href="#myself_page" aria-controls="myself_page" role="tab" data-toggle="tab">个人信息</a>
+				</li>	
+				<div v-show="screenWidth<768" ><br/></div>
+				<li v-show="screenWidth<768" class="mobile_li"></li>
+				<li role="presentation"  v-if="ad_power==1">
+					<a href="#problem_page" aria-controls="problem_page" role="tab" data-toggle="tab" >问题管理</a>
+				</li>
+				<li role="presentation" v-if="ad_power==1">
+					<a href="#setting_page" aria-controls="setting_page" role="tab" data-toggle="tab" >系统设置</a>
+				</li>
+			</ul>
+		</div>
+			
+		<!--内容控件-->
+		<div class="tab-content">
+			<!--预约名单-->			
+			<div role="tabpanel" class="tab-pane fade in active" id="reserve_page">
+				<div class="panel-group hideInfo" id="accordion" role="tablist" aria-multiselectable="true"  >
+				<div id="emptyInfo" v-if="user_info[0]==undefined"><p>今天暂未收到预约</p></div>			
+					<!--标题信息控件-->
+					<div :class="list.statue==0?'panel-default panel list'+index:'panel-success panel list'+index" v-for="(list,index) in user_info">
+						<div :aria-controls="'collapse'+index" :href="'#collapse'+index" role="button" data-toggle="collapse" data-parent="#accordion" class="panel-heading" role="tab" :id="'heading'+index">	
+							<h4 class="panel-title">					
+					        <div id="">
+						         {{list.name}} {{list.time}} 
+						         <span class="statue">
+						         	{{reserve_Statue[list.statue]}}
+						         </span>
+					         </div>
+					    		</h4>
+						</div>
+						<!--内容-->
+						<div :id="'collapse'+index" class="panel-collapse collapse" role="tabpanel" :aria-labelledby="'heading'+index">
+							<div class="panel-body">
+								<p><b>姓名：</b>{{list.name}}</p>
+								<p><b>学号：</b>{{list.uid}}</p>
+								<p><b>班级：</b>{{list.classname}}</p>
+								<p><b>电话：</b><a :href="'tel:'+list.phone">{{list.phone}}</a>（点击拨打）</p>
+								<p><b>微信：</b>{{list.wx}}</p>
+								<p><b>电脑问题描述：</b>{{list.describe}}</p>
+								<p><b>预约时间：</b>{{list.time}}</p>
+								<p><b>状态：</b>{{reserve_Statue[list.statue]}}</p>
+								<p v-if="list.ad_name"><b>维修员：</b>{{list.ad_name}}</p>							
+								<div class="btnList">
+									<button class="btn btn-warning" v-if="list.aid==admin_info.ad_uid" @click="cancelList(list)">取消</button>
+									<button class="btn btn-primary" v-if="list.statue==0" @click="finishList(list)">完成</button>
+									<button  type="button" class="btn btn-danger"  v-if="admin_info.ad_power==1" data-toggle="modal" :data-target="'#del_reserve_modal'+index">删除</button>
+								</div>
+								
+								<!-- 模态框 -->
+								<div class="modal fade" :id="'del_reserve_modal'+index" tabindex="-1" role="dialog" aria-labelledby="reserve_lable">
+								  <div class="modal-dialog" role="document">
+								    <div class="modal-content">
+								      <div class="modal-header">
+								        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+								        <h4 class="modal-title" id="reserve_lable">警告</h4>
+								      </div>
+								      <div class="modal-body">
+								        您确认删除该订单吗？（姓名：{{list.name}}）
+								      </div>
+								      <div class="modal-footer">
+								      	<button type="button" class="btn btn-danger" @click="deleteReserve(list,index)" data-dismiss="modal">删除</button>
+								        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+								      </div>
+								    </div>
+								  </div>
+								</div>
+									
+								
+							</div>
+						</div>
+					</div>
+				</div>
+		
+				<!--分页导航-->
+				<div class="page_nav">
+					<b-pagination size="md" :total-rows="order_pages.total" v-model="re_current_page" :per-page="order_pages.per_page"></b-pagination>
+				
+				</div>  
+				
+			</div>
+						
+			<!--维修员名单-->	
+			<div role="tabpanel" class="tab-pane fade" id="admin_page"> 
+				<div class="panel-group hideInfo" id="accordion" role="tablist" aria-multiselectable="true" >
+					<div class="panel-danger"></div>
+					<!--标题信息控件-->
+					<div  :class="admin_list.ad_power==0?'panel-default panel admin_list'+index:'panel-success panel admin_list'+index" v-for="(admin_list,index) in all_info">
+						<div :aria-controls="'collapse1'+index" :href="'#collapse1'+index" role="button" data-toggle="collapse" data-parent="#accordion" class="panel-heading" role="tab" :id="'heading'+index">
+							<h4 class="panel-title">								    
+								<span v-if="admin_list.ad_uid!==admin_info.ad_uid">
+									{{admin_list.ad_reservenum}}台  		
+								</span>
+								<span v-if="admin_list.ad_uid==admin_info.ad_uid">
+									{{admin_info.ad_reservenum}}台  		
+								</span>
+								{{admin_list.ad_name}}   {{admin_list.ad_classname}}	
+								<span class="statue">
+						         	{{powerStatue[admin_list.ad_power]}}
+						         </span>
+					   	 	</h4>
+						</div>
+						<!--内容-->
+						<div :id="'collapse1'+index" class="panel-collapse collapse" role="tabpanel" :aria-labelledby="'heading'+index">
+							<div class="panel-body">
+								
+									<p><b>姓名：</b>{{admin_list.ad_name}}<span v-if="admin_info.ad_uid==admin_list.ad_uid">（本人）</span></p>
+									<p><b>学号：</b>{{admin_list.ad_uid}}</p>
+									<p><b>班级：</b>{{admin_list.ad_classname}}</p>
+									<p><b>电话：</b><a :href="'tel:'+admin_list.phone">{{admin_list.ad_phone}}</a>（点击拨打）</p>
+									<p><b>微信：</b>{{admin_list.ad_wx}}</p>
+									<span v-if="admin_list.ad_uid!==admin_info.ad_uid">
+										<p><b>维修数量：</b>{{admin_list.ad_reservenum}} 台</p>
+									</span>
+									<span v-if="admin_list.ad_uid==admin_info.ad_uid">
+										<p><b>维修数量：</b>{{admin_info.ad_reservenum}} 台</p>
+									</span>
+									
+									<p><b>权限：</b>{{powerStatue[admin_list.ad_power]}}</p>	
+
+								
+								<div class="btnList" >
+									<button class="btn btn-warning" v-if="admin_list.ad_power==0 && admin_info.ad_power==1" @click="upAdmin(admin_list,index)" >升级</button>
+									<button class="btn btn-primary" v-if="admin_list.ad_power==1 && admin_info.ad_uid!==admin_list.ad_uid && admin_info.ad_power==1" @click="downAdmin(admin_list,index)" >降级</button>
+									<button type="button" class="btn btn-danger"  v-if="admin_info.ad_uid!==admin_list.ad_uid && admin_info.ad_power==1 " data-toggle="modal" :data-target="'#del_admin_modal'+index" >删除</button>
+								</div>
+								<!-- 模态框 -->
+								<div class="modal fade" :id="'del_admin_modal'+index" tabindex="-1" role="dialog" aria-labelledby="admin_lable">
+								  <div class="modal-dialog" role="document">
+								    <div class="modal-content">
+								      <div class="modal-header">
+								        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+								        <h4 class="modal-title" id="admin_lable">警告</h4>
+								      </div>
+								      <div class="modal-body">
+								        您确认删除该维修员吗？（姓名：{{admin_list.ad_name}}）
+								      </div>
+								      <div class="modal-footer">
+								      	<button type="button" class="btn btn-danger" @click="deleteAdmin(admin_list,index)" data-dismiss="modal">删除</button>
+								        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+								      </div>
+								    </div>
+								  </div>
+								</div>
+									
+								
+							</div>
+						</div>
+					</div>
+				</div>
+				<!--分页导航-->
+				<div class="page_nav">
+					<b-pagination size="md" :total-rows="admin_pages.total" v-model="ad_current_page" :per-page="admin_pages.per_page"></b-pagination>
+				</div>  
+			</div>
+			
+			<!--个人信息-->	
+			<div role="tabpanel" class="tab-pane fade" id="myself_page">
+				<div class="hideInfo">
+					<div class="myself_box checkBox">
+						<!--个人信息表单-->
+						<b-form method="POST" class="input_valicate" action="{:url('Myself/updateMyself')}">	
+							
+								<!--隐藏id-->
+								<b-form-group class="hideInput" >
+									<input type="text" name = "ad_id" id="ad_id" :value="admin_info.ad_id"  />
+								</b-form-group>	
+							
+								<div>
+								<!--姓名-->
+								<b-form-group >
+									<label class="control-label " for="ad_name">姓名</label>
+									<b-form-input placeholder="请输入新的姓名" id="ad_name" name="ad_name" v-model="admin_info.ad_name" ></b-form-input>
+								</b-form-group>	
+								
+								<!--班级-->
+								<b-form-group >
+									<label class="control-label " for="admin_classname">班级</label>
+									<b-form-input placeholder="请输入新的班级" id="admin_classname" name="ad_classname" v-model="admin_info.ad_classname" ></b-form-input>
+								</b-form-group>	
+								</div>
+								<!--电话-->
+								<b-form-group >
+									<label class="control-label " for="admin_phone">电话</label>
+									<b-form-input placeholder="请输入新的电话" id="admin_phone" name="ad_phone" v-model="admin_info.ad_phone" ></b-form-input>
+								</b-form-group>	
+								
+								<!--微信-->
+								<b-form-group >
+									<label class="control-label " for="admin_wx">微信</label>
+									<b-form-input placeholder="请输入新的姓名" id="admin_wx" name="ad_wx" v-model="admin_info.ad_wx" ></b-form-input>
+								</b-form-group>			
+							
+							
+							<!--验证码-->
+							<b-form-group>
+								<label class="control-label" for="captcha1">验证码</label>
+								<b-form-input placeholder="请输入正确的验证码" id="captcha1"  name="captcha1" ></b-form-input>
+							</b-form-group>	
+							<!--按钮-->						
+							<div class="updateBtn">
+								<div><img :src="captcha_src" @click="change()" class="captcha_box"/></div>
+								<input class="btn btn-primary" type="submit" value="更新" />
+							</div>
+						</b-form>
+						
+						
+					</div>
+				</div>
+			</div>	
+			
+			<!--问题管理-->
+			<div role="tabpanel" class="tab-pane fade" id="problem_page" v-if="pro_info!==null">	
+				<b-form method="POST" class="input_valicate" >		
+					<!--问题-->
+					<b-form-group  id="add_problem">
+						<label class="control-label">问题</label>
+						<b-form-input v-model="add_problem" placeholder = "请输入问题" name="problem"></b-form-input>
+					</b-form-group>
+					<!--答案-->
+					<b-form-group  id="add_answer_list">
+						<label class="control-label">答案</label>
+						<b-form-input class="add_answer" placeholder="请输入答案，如需多个答案，请点击“新增答案”按钮" name="answer"></b-form-input>						
+					</b-form-group>					
+				</b-form>
+				<!--操作列表-->
+				<span class="btn_box" >
+					<button class="btn btn-primary" type="button" @click="add_singer_answer()">新增答案</button>	
+					<button class="btn btn-danger" type="button" @click="save_problem()">保存</button>
+				</span>	
+				
+				
+				<div class="hideInfo table_box">
+					<table class="problem_box table table-hover ">
+						<tr >
+							<th class="text-center">id</th>
+							<th class="text-center">问题</th>
+							<th class="text-center">答案</th>
+							<th class="text-center">操作</th>
+						</tr>
+						<tr v-for="(pro_list,all_index) in pro_info">
+							<td>{{pro_list.problem_id}}</td>
+							<td >
+								<span >
+									<span @click="change_statue()">{{pro_list.problem}}</span>
+									<textarea v-model="pro_list.problem" class="form-control hideInput" @blur="change_problem(pro_list)"></textarea>
+									<!--<input type="text"  />-->
+								</span>					
+							</td>
+							<td >					
+								<ul>
+									<li v-for="(pro_list_a,arr_index) in JSON.parse(pro_list.answer)" >
+										<span @click="change_statue()" :class="'answer_'+pro_list.problem_id">{{pro_list_a}}</span>
+										<textarea :value="pro_list_a" class="form-control hideInput" @blur="change_answer(pro_list.problem_id,arr_index)"></textarea>
+										<!--<input type="text" />-->
+									</li>								
+								</ul>
+							</td>
+							<td>
+								<button class="btn btn-danger problem_btn"  data-toggle="modal" :data-target="'#del_problem_modal'+all_index">删除</button>
+								<!-- 模态框 -->
+								<div class="modal fade" :id="'del_problem_modal'+all_index" tabindex="-1" role="dialog" aria-labelledby="problem_lable">
+								  <div class="modal-dialog" role="document">
+								    <div class="modal-content">
+								      <div class="modal-header">
+								        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+								        <h4 class="modal-title" id="problem_lable">警告</h4>
+								      </div>
+								      <div class="modal-body">
+								        您确认删除该问题吗？（id:{{pro_list.problem_id}}）
+								      </div>
+								      <div class="modal-footer">
+								      	<button type="button" class="btn btn-danger" @click="der_problem(pro_list.problem_id,all_index)" data-dismiss="modal">删除</button>
+								        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+								      </div>
+								    </div>
+								  </div>
+								</div>
+							</td>
+						</tr>					
+					</table>
+					<!--分页导航-->
+					<div class="page_nav">
+						<b-pagination size="md" :total-rows="pro_pages.total" v-model="pr_current_page" :per-page="pro_pages.per_page"></b-pagination>
+					</div>  
+				</div>
+			</div>
+		
+			<!--系统设置-->
+			<div role="tabpanel" class="tab-pane fade" id="setting_page">
+				<div v-if="setting!==null" class="hideInfo">
+					<div class="setting_box">
+						<!--表单信息填写-->
+						<b-form method="POST" class="input_valicate" action="{:url('Setting/updateAll')}">
+							<!--暂停预约-->
+							<b-form-group>
+								<label class="control-label" for="banReserve">是否暂停预约</label>
+								<p>当前状态：{{getBanReserve[setting.banReserve]}} 
+									<span class="BanReserveBtn">
+										<b-btn variant="info" v-if="setting.banReserve==0" @click="updateBanReserve()">开启预约</b-btn>
+										<b-btn variant="danger" v-if="setting.banReserve==1" @click="updateBanReserve()">暂停预约</b-btn>								</span>	
+								</p>					
+							</b-form-group>
+							
+							<div class="row">
+								<!--注册秘钥-->
+								<b-form-group class= "col-md-6 col-xs-6">
+									<label class="control-label" for="key">注册秘钥</label>
+									<b-form-input placeholder="请输入注册秘钥" id="key" name="key" v-model="setting.key"></b-form-input>
+								</b-form-group>
+								
+								<!--维修最大人数-->
+								<b-form-group class= "col-md-6 col-xs-6">
+									<label class="control-label" for="maxNum">维修最大人数</label>
+									<b-form-input placeholder="请输入维修最大人数" id="maxNum" name="maxNum" v-model="setting.maxNum"></b-form-input>
+								</b-form-group>
+							
+								<!--正式上课时间-->
+								<b-form-group class= "col-md-12 col-xs-12">
+									<label class="control-label" for="startTime">正式上课时间</label>						
+									    <b-form-input readonly class="span2" size="16" type="text" id="startTime" placeholder="请输入正式上课时间" v-model="setting.startTime"  name="startTime"></b-form-input>	
+									     <span class="add-on"><i class="icon-remove"></i></span>
+			  							 <span class="add-on"><i class="icon-th"></i></span>
+								</b-form-group>
+													
+								<!--从第几学期周开始维修-->
+								<b-form-group class= "col-md-6 col-xs-6">
+									<label class="control-label" for="beginSchoolWeek" >从第几学期周开始维修</label>		
+									<b-form-select @change="limitSelect()"  v-model="beginSchoolWeek" placeholder="请选择从第几学期周开始维修" id="beginSchoolWeek" name="beginSchoolWeek" >
+										<template slot="first">
+											<option disabled>选择从第几学期周开始维修</option>
+										</template>	
+										<option v-for="bs_option in beginSchoolWeekOptions" class="bs_option"  >{{bs_option}}</option>												
+									</b-form-select>	
+									
+								</b-form-group>
+							
+								<!--从第几学期周结束维修-->
+								<b-form-group class= "col-md-6 col-xs-6">
+									<label class="control-label" for="endSchoolWeek">从第几学期周结束维修</label>				
+									<b-form-select v-model="endSchoolWeek" placeholder="请选择从第几学期周结束维修"  id="endSchoolWeek" name="endSchoolWeek">
+										<template slot="first">
+											<option   disabled>从第几学期周结束维修</option>
+										</template>	
+										<option v-for="es_option in endSchoolWeekOptions" class="es_option" >{{es_option}}</option>			
+									</b-form-select>		
+								</b-form-group>
+												
+								<!--每星期星期几开始维修-->
+								<b-form-group class= "col-md-6 col-xs-6">
+									<label class="control-label" for="beginWeek" >每星期星期几开始维修</label>					
+									<b-form-select v-model="beginWeek"  placeholder="请选择每星期星期几开始维修" id="beginWeek" name="beginWeek">
+										<template slot="first">
+											<option disabled="">从第几学期周结束维修</option>
+										</template>				
+										<option v-for="(bw_option,index) in beginWeekOption" class="bw_option" :value="index">{{bw_option}}</option>	
+									</b-form-select>		
+								</b-form-group>
+							
+								<!--每星期星期几结束维修-->
+								<b-form-group class= "col-md-6 col-xs-6">
+									<label class="control-label" for="endWeek">每星期星期几结束维修</label>				
+									<b-form-select  v-model="endWeek"  placeholder="请选择每星期星期几结束维修" id="endWeek" name="endWeek">
+										<template slot="first">
+											<option disabled>每星期星期几结束维修</option>
+										</template>				
+										<option v-for="(ew_option,index) in endWeekOption" class="ew_option" :value="index" >{{ew_option}}</option>					
+									</b-form-select>	
+								</b-form-group>
+										
+								<!--每天开始预约的时间-->
+								<b-form-group class= "col-md-6 col-xs-6">
+									<label class="control-label" for="beginTime">每天开始预约的时间</label>						
+									    <b-form-input readonly placeholder="请选择每天开始预约的时间" id="beginTime" name="beginTime" v-model="setting.beginTime"></b-form-input>											
+								</b-form-group>
+							
+								<!--每天结束预约的时间-->
+								<b-form-group class= "col-md-6 col-xs-6">
+									<label class="control-label" for="endTime">每天结束预约的时间</label>
+									<b-form-input  readonly placeholder="请选择每天结束预约的时间" id="endTime" name="endTime" v-model="setting.endTime"></b-form-input>
+								</b-form-group>
+							
+								<!--每天开始维修的时间-->
+								<b-form-group class= "col-md-6 col-xs-6">
+									<label class="control-label" for="sbeginTime">每天开始维修的时间</label>
+									<b-form-input readonly placeholder="请选择每天开始维修的时间" id="sbeginTime" name="sbeginTime" v-model="setting.sbeginTime"></b-form-input>
+								</b-form-group>
+							
+								<!--每天结束维修的时间-->
+								<b-form-group class= "col-md-6 col-xs-6">
+									<label class="control-label" for="sendTime">每天结束维修的时间</label>
+									<b-form-input  readonly placeholder="请选择每天结束维修的时间" id="sendTime" name="sendTime" v-model="setting.sendTime"></b-form-input>
+								</b-form-group>
+							</div>
+							<!--维修地点-->
+							<b-form-group>
+								<label class="control-label" for="seat">维修地点</label>
+								<b-form-input placeholder="请输入维修地点" id="seat" name="seat" v-model="setting.seat"></b-form-input>
+							</b-form-group>	
+							
+							<!--验证码-->
+							<b-form-group>
+								<label class="control-label" for="captcha2">验证码</label>
+								<b-form-input placeholder="请输入正确的验证码" id="captcha2" name="captcha2" ></b-form-input>
+							</b-form-group>							
+							
+							<!--按钮-->						
+							<div class="updateBtn">
+								<div><img :src="captcha_src" @click="change()" class="captcha_box"/></div>
+								<input class="btn btn-primary" type="submit" value="更新" />
+							</div>
+						</b-form>
+			
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</div>
+
+<script type="text/javascript">
+    $(".hideInfo").show()
+	//Vue
+	$Vue = new Vue({
+		el: ".vue_box",
+		data: {
+			admin_info:{$info},//当前维修员信息	
+			admin_name:{$info}['ad_name'],//维修员姓名
+			user_info: {$reserveList}, //预约列表	
+			pro_info: {$pro_info}, //问题列表
+			ad_power:{$ad_power},//当前维修员的权限
+			all_info:{$all_info},//所有维修员信息
+			setting:{$setting},//系统设置
+			beginSchoolWeek:0,//开始学期周
+			endSchoolWeek:0,//结束学期周
+			beginWeek:0,//开始星期
+			endWeek:0,//结束星期
+			powerStatue:{$powerStatue},//权限
+			order_pages:{$order_pages},//预约分页的信息
+			admin_pages:{$admin_pages},//维修员分页的信息
+			pro_pages:{$pro_pages},//问题分页的信息
+			re_current_page: 1,//预约名单当前页
+			ad_current_page: 1,//管理名单当前页
+			pr_current_page: 1,//问题当前页
+			reserve_Statue: {$reserveStatue},//预约的状态
+			getWeek: {$getWeek},//预约的状态		
+			getBanReserve:{$getBanReserve},//是否暂停预约			
+			beginSchoolWeekOptions:[],//学期周选项
+			endSchoolWeekOptions:[],//学期周选项
+			beginWeekOption:[],//星期选项
+			endWeekOption:[],//星期选项
+			captcha_src:"{:captcha_src()}",//验证码图片
+			add_problem:"",//新增的问题		
+			screenWidth: document.body.clientWidth//屏幕宽度
+		},
+		//初始化
+		created: function() {
+			
+			
+			if(this.setting!==null){
+				this.beginSchoolWeek=this.setting['beginSchoolWeek'];
+				this.endSchoolWeek=this.setting['endSchoolWeek'];
+				this.beginWeek=this.setting['beginWeek'];
+				this.endWeek=this.setting['endWeek']
+				
+				//初始化开学周选项
+				for(var i=1;i<=20;i++){			
+					this.beginSchoolWeekOptions.push(i);
+					this.endSchoolWeekOptions.push(i);
+				}
+				//初始化星期选项
+				for(var i=0;i<=6;i++){			
+					this.beginWeekOption.push('星期'+this.getWeek[i]);
+					this.endWeekOption.push('星期'+this.getWeek[i]);
+				}		
+			}				
+		},
+		//dom加载完成后运行，主要用于选项的限制
+		mounted:function () {
+			if(this.setting!==null){
+				this.limitSelect();		
+			}		
+	    },
+	
+		watch:{
+		    //监控输入的变化，主要用于限制选项
+			beginSchoolWeek:function(){	
+				this.limitSelect();		
+		    },
+		    endSchoolWeek:function(){	    
+				this.limitSelect();				
+		    },
+		    beginWeek:function(){					
+				this.limitSelect();		
+		    },
+		    endWeek:function(){					
+				this.limitSelect();		
+		    },
+		    //监控预约名单当前页变化
+		  	re_current_page: function(page){
+				this.$http.get("{:url('index')}?page_id=1&page="+page)
+				.then(function(data){
+					data = data.body;
+					this.user_info = data.msg[0];
+					this.order_pages = data.msg[1];
+					$('.panel-collapse').removeClass('in');
+				});			
+			},
+			//监控管理员名单当前页变化
+			ad_current_page: function(page){
+				this.$http.get("{:url('index')}?page_id=2&page="+page) 
+				.then(function(data){	
+					data = data.body;
+					this.all_info = data.msg[0];
+					this.admin_pages = data.msg[1];
+					$('.panel-collapse').removeClass('in');
+				});			
+			},
+			//监控问题当前页变化
+			pr_current_page: function(page){
+				this.$http.get("{:url('index')}?page_id=3&page="+page) 
+				.then(function(data){	
+					data = data.body;
+					this.pro_info = data.msg[0];
+					this.pro_pages = data.msg[1];
+					$('.panel-collapse').removeClass('in');
+				});			
+			},
+			 		
+		},
+		//方法
+		methods: {	
+			chatin:function(){
+				this.$http.post("{:url('socket/chatlogin/adminchat')}",{
+					username:this.admin_name
+				}).then(function(data){
+					if(data.body=="ok"){
+						window.location.href="{:url('socket/chat/chat')}";						
+					}					
+				})
+			},
+			/*预约操作*/
+			//完成维修
+			finishList: function(list) {
+				this.$http.post("{:url('Reserve/finish')}", {
+					id: list.id,
+					ad_uid:this.admin_info.ad_uid
+				}).then(function(data){	
+					list.aid = this.admin_info.ad_uid;
+					list.statue = 1;
+					list.ad_name = this.admin_info.ad_name;
+					this.admin_info.ad_reservenum +=1;
+					this.$toast('完成维修');
+				})
+			},
+			
+			//取消完成
+			cancelList: function(list) {
+				this.$http.post("{:url('Reserve/cancel')}", {
+					id: list.id,
+					ad_uid:this.admin_info.ad_uid,
+				}).then(function(data){
+					list.aid = null;
+					list.statue = 0;
+					list.ad_name = "";
+					this.admin_info.ad_reservenum -=1;
+					this.$toast('取消完成');
+				})
+			},
+		
+			//删除预约
+			deleteReserve: function(list, index) {
+				this.$http.post("{:url('Reserve/deleteReserve')}", {
+					id: list.id		
+				}).then(function(data){
+					var name = '.list' + index;
+					this.user_info.splice(index,1);
+					$('#collapse'+index).removeClass('in');
+					this.$toast('删除成功');
+				})
+			},
+			//改变验证码
+			change:function(){
+				this.captcha_src += "?code="+Math.random(10000);
+			},
+			
+			
+			/*维修员操作*/
+			//删除维修员
+			deleteAdmin: function(admin_list, index) {
+				this.$http.post("{:url('Admin/deleteAdmin')}", {
+					ad_id: admin_list.ad_id		
+				}).then(function(data){
+					var name = '.admin_list' + index;
+					this.all_info.splice(index,1);
+					$('#collapse1'+index).removeClass('in');
+					this.$toast('删除成功');
+				})
+			},			
+			//升级为超级管理员
+			upAdmin: function(admin_list, index) {
+				this.$http.post("{:url('Admin/upAdmin')}", {
+					ad_id: admin_list.ad_id		
+				}).then(function(data){
+					admin_list.ad_power = 1
+					this.$toast('升级成功');
+				})
+			},
+			//降级为普通管理员
+			downAdmin: function(admin_list, index) {
+				this.$http.post("{:url('Admin/downAdmin')}", {
+					ad_id: admin_list.ad_id		
+				}).then(function(data){
+					admin_list.ad_power = 0
+					this.$toast('降级成功');
+				})
+			},
+			
+			/*问题管理*/
+			//新增答案
+			add_singer_answer:function(){
+				$('#add_answer_list').append('<input id="__BVID__6" type="text" placeholder="请输入答案，如需多个答案，请点击“新增答案”按钮" class="add_answer form-control">');
+			},
+			
+			//保存问题答案
+			save_problem:function(){
+				var add_answer = $('.add_answer');
+				var add_answer_list = [];
+			
+				//将多个答案放入数组
+				for(var i = 0;i<add_answer.length;i++){
+					if(add_answer[i].value==''){
+						continue;
+					}else{
+						add_answer_list.push(add_answer[i].value);
+					}			
+				}		
+				
+				//判断是否输入有空
+				if(this.add_problem==""||add_answer_list.length==0){
+					this.$toast('新增失败，填写的问题或者答案不能为空');				
+				}else{
+					this.$http.post("{:url('Problem/add_problem')}",{
+						problem:this.add_problem,
+						answer_list:JSON.stringify(add_answer_list)
+					}).then(function(data){
+						var add_answer_lists = JSON.stringify(add_answer_list);
+						var obj={
+							'problem_id':data.body,
+							'problem':this.add_problem,
+							'answer':add_answer_lists,
+						};
+						this.pro_info.unshift(obj);
+						this.pro_info.pop();
+						this.$toast('新增成功');
+						this.add_problem='';
+						add_answer.remove();
+						$('#add_answer_list').append('<input id="__BVID__6" type="text" placeholder="请输入答案，如需多个答案，请点击“新增答案”按钮" class="add_answer form-control">');
+						
+					})				
+				}
+				
+			},
+			
+			//删除问题
+			der_problem:function(problem_id,index){
+				this.$http.post("{:url('Problem/del_problem')}",{
+					problem_id:problem_id,
+				}).then(function(data){
+					data = data.body;
+					this.pro_info = data.msg[0];
+					this.pro_pages = data.msg[1];
+				})
+			},
+			
+			//切换可修改状态
+			change_statue:function(){			
+				var target = window.event.srcElement;
+				target.setAttribute('style','display:none');
+				target.nextElementSibling.setAttribute('style','display:block')	;
+				target.nextElementSibling.focus();			
+			},
+			//修改问题
+			change_problem:function(this_problem){		
+				var target = window.event.srcElement;
+				this.$http.post("{:url('Problem/updata_problem')}",{
+					problem:this_problem.problem,
+					problem_id:this_problem.problem_id
+				}).then(function(data){
+					target.setAttribute('style','display:none');
+					target.previousElementSibling.setAttribute('style','display:block')	;
+				})		
+			},
+			
+			//修改答案
+			change_answer:function(problem_id,arr_index){
+				var target = window.event.srcElement;
+				var change_answer = $('.answer_'+problem_id);
+				var change_answer_list = [];
+				target.previousElementSibling.innerHTML = target.value;
+				//将修改答案所在的组放到新数组在存入数据库
+				for(var i= 0;i<change_answer.length;i++){
+					change_answer_list.push(change_answer[i].innerHTML);
+				}
+				change_answer_list = JSON.stringify(change_answer_list);
+				
+				this.$http.post("{:url('Problem/updata_answer')}",{
+					answer:change_answer_list,
+					problem_id:problem_id
+				}).then(function(data){				
+					target.setAttribute('style','display:none');
+					target.previousElementSibling.setAttribute('style','display:block');				
+				})				
+			},
+			
+			
+			/*系统设置*/
+			//开启、暂停预约
+			updateBanReserve:function(){
+				this.$http.post("{:url('Setting/updateBanReserve')}", {
+					changeStatue:parseInt(this.setting.banReserve),
+				}).then(function(data){
+					if(data.body==0){
+						this.setting.banReserve = 1;
+						this.$toast('开启成功');
+					}else{
+						this.setting.banReserve = 0;	
+						this.$toast('暂停成功');
+					}			
+				})
+			},	
+			
+			//限制select选项
+			limitSelect:function(){
+				//学期周限制
+				for(var i = 0;i<20;i++){
+					$(".bs_option").eq(i).removeAttr("disabled")
+					$(".es_option").eq(i).removeAttr("disabled")					
+				}
+//				
+				for(var i=this.beginSchoolWeek-1;i>0;i--){	
+					$(".es_option").eq(i-1).attr("disabled","disabled");				
+				}
+				for(var i=this.endSchoolWeek-1;i<=20;i++){			
+					$(".bs_option").eq(i+1).attr("disabled","disabled");				
+				}
+				
+				//星期限制
+				for(var i = 0;i<6;i++){
+					$(".bw_option").eq(i).removeAttr("disabled")
+					$(".ew_option").eq(i).removeAttr("disabled")					
+				}
+//				
+				for(var i=this.beginWeek;i>0;i--){	
+					$(".ew_option").eq(i-1).attr("disabled","disabled");				
+				}
+				for(var i=this.endWeek;i<=6;i++){			
+					$(".bw_option").eq(i+1).attr("disabled","disabled");				
+				}
+								
+			}
+		}
+	})
+</script>
+
+<script type="text/javascript">
+	//日期控件
+	$("#startTime").datetimepicker({
+		format: 'yyyy-mm-dd 00:00:00',//显示格式
+		todayHighlight: 1,//今天高亮
+		minView: "month",//设置只显示到月份
+		todayBtn:1,//选择今天按钮
+		startView:2,//首先显示日
+		showMeridian: false,//24小时制
+		autoclose: 1,//选择后自动关闭	
+	});
+		
+</script>
+<script type="text/javascript">
+	//时间控件
+	$(function() {
+		$('#beginTime').timepicker({		
+		    showMeridian: false,		    
+		});
+		$('#endTime').timepicker({
+		    showMeridian: false,	    
+		});
+		$('#sbeginTime').timepicker({
+		    showMeridian: false,		    
+		});
+		$('#sendTime').timepicker({
+		    showMeridian: false,		    
+		});
+	});
+</script>
+
+<script type="text/javascript">
+	$(function() {
+		$('.input_valicate').bootstrapValidator({
+			//关闭填写立刻验证
+//			live: 'disabled',
+			//检验提示　　　　　　
+			message: 'This value is not valid',
+			feedbackIcons: {　　　　　　　　
+				valid: 'glyphicon glyphicon-ok',
+　　　　	　　　　invalid: 'glyphicon glyphicon-remove',
+　　　　　 　　　validating: 'glyphicon glyphicon-refresh'　　　　　　　　
+			},
+			//字段验证
+			fields: {
+				//秘钥
+				key: {
+					message: '秘钥非法',
+					validators: {
+						notEmpty: {
+							message: '秘钥不能为空'
+						},					
+					}
+				},
+				// 最大维修人数
+				maxNum: {
+					message: '最大维修人数非法',
+					validators: {
+						notEmpty: {
+							message: '最大维修人数不能为空'
+						},	
+						digits:{
+							message: '最大维修人数必须是数字'	
+						},
+						lessThan:{
+							message: '最大维修人数最多为50',
+							value:'50'
+						}
+					}
+				},	
+				// 开学时间
+				startTime: {
+					message: '开学时间非法',
+					validators: {
+						notEmpty: {
+							message: '开学时间不能为空'
+						},					
+					}
+				},	
+				// 从学期第几周开始维修
+				beginSchoolWeek: {
+					message: '时间非法',
+					validators: {
+						notEmpty: {
+							message: '开始维修学期周不能为空'
+						},					
+					}
+				},	
+				// 从学期第几周结束维修
+				endSchoolWeek: {
+					message: '时间非法',
+					validators: {
+						notEmpty: {
+							message: '结束维修学期周不能为空'
+						},					
+					}
+				},
+				// 从星期几开始维修
+				beginWeek: {
+					message: '时间非法',
+					validators: {
+						notEmpty: {
+							message: '开始维修星期不能为空'
+						},					
+					}
+				},// 从星期几结束维修
+				endWeek: {
+					message: '时间非法',
+					validators: {
+						notEmpty: {
+							message: '结束维修星期不能为空'
+						},					
+					}
+				},
+				//开始预约的时间
+				beginTime:{
+					trigger:"change",
+					message: '开始预约时间非法',
+					validators: {
+						notEmpty: {
+							message: '开始预约时间不能为空'
+						},
+						callback: {
+	                        message: '开始预约时间必须小于结束预约时间',
+	                        callback: function(value, validator, $field) {                        	
+	                            var otherbox = $("#endTime").val();//获得另一个的值                           
+                                if (parseInt(otherbox)>parseInt(value)) {       
+	                              	validator.updateStatus("beginTime", validator.STATUS_VALID, 'callback');        
+	                                	validator.updateStatus("endTime", validator.STATUS_VALID, 'callback');                                         
+                                    return true;
+                                }                     
+	                            return false;
+	                        }
+	                    }
+					}
+				},
+				//结束预约的时间		
+				endTime:{
+					trigger:"change",				
+					message: '开始预约时间非法',
+					validators: {
+						//                        非空
+						notEmpty: {
+							message: '结束预约时间不能为空'
+						},
+						callback: {
+	                        message: '结束预约时间必须大于结束预约时间',
+	                        callback: function(value, validator, $field) {
+	            
+	                            var otherbox = $("#beginTime").val();//获得另一个的值                        
+                                if (parseInt(otherbox)<parseInt(value)) {  
+                              	  	validator.updateStatus("beginTime", validator.STATUS_VALID, 'callback');                     
+                                		validator.updateStatus("endTime", validator.STATUS_VALID, 'callback');                 
+                                    return true;
+                                }                     
+	                            return false;
+	                        }
+	                    }
+					}
+				},
+				//开始维修的时间
+				sbeginTime:{
+					trigger:"change",				
+					message: '开始维修时间非法',
+					validators: {
+						//                        非空
+						notEmpty: {
+							message: '开始维修时间不能为空'
+						},
+						callback: {
+	                        message: '开始维修时间必须大于结束维修时间',
+	                        callback: function(value, validator, $field) {	            
+	                            var otherbox = $("#sendTime").val();//获得另一个的值                        
+                                if (parseInt(otherbox)>parseInt(value)) {  
+                              	  	validator.updateStatus("sbeginTime", validator.STATUS_VALID, 'callback');                     
+                                		validator.updateStatus("sendTime", validator.STATUS_VALID, 'callback');                 
+                                    return true;
+                                }                     
+	                            return false;
+	                        }
+	                    }
+					}
+				},
+				//结束维修的时间
+				sendTime:{
+					trigger:"change",				
+					message: '开始维修时间非法',
+					validators: {
+						//                        非空
+						notEmpty: {
+							message: '结束维修时间不能为空'
+						},
+						callback: {
+	                        message: '结束维修时间必须大于结束维修时间',
+	                        callback: function(value, validator, $field) {
+	                            var otherbox = $("#sbeginTime").val();//获得另一个的值                        
+                                if (parseInt(otherbox)<parseInt(value)) {  
+                              	  	validator.updateStatus("sbeginTime", validator.STATUS_VALID, 'callback');                     
+                                		validator.updateStatus("sendTime", validator.STATUS_VALID, 'callback');                 
+                                    return true;
+                                }                     
+	                            return false;
+	                        }
+	                    }
+					}
+				},
+				//维修地点
+				seat: {
+					validators: {
+						//非空
+						notEmpty: {
+							message: '维修地点不能为空'
+						},					
+					}
+				},
+				//验证码
+				captcha: {
+					validators: {
+						//非空
+						notEmpty: {
+							message: '验证码不能为空'
+						},					
+					}
+				},
+				
+				/*个人信息*/
+				// 姓名
+				ad_name: {
+					message: '姓名非法',
+					validators: {
+						//                        非空
+						notEmpty: {
+							message: '姓名不能为空'
+						},
+						//                       基于正则表达是的验证
+						regexp: {
+							regexp: /^([\u4e00-\u9fa5]{2,5})$/,
+							message: '姓名为2-5位中文'
+						}
+					}
+				},
+
+				//                学号
+				ad_uid: {
+					message: '学号非法',
+					validators: {
+						notEmpty: {
+							message: '学号不能为空'
+						},
+						//                        基于正则表达是的验证
+						regexp: {
+							regexp: /^1[0-9]{10}$/,
+							message: '学号为1开头，长度为11位'
+						}
+					}
+				},
+				
+				//                班级
+				ad_classname: {
+					message: '班级非法',
+					validators: {
+						notEmpty: {
+							message: '班级不能为空'
+						},
+						//                        基于正则表达是的验证
+						regexp: {
+							regexp: /^H1[0-9]\S+班$/,
+							message: '班级格式错误，如H15软件工程B班'
+						},
+						//验证长度
+						stringlength: {
+							min: 5,
+							max: 12,
+							message: '班级名称长度为5-12'
+						},
+					}
+				},
+				//				  手机号码
+				ad_phone: {
+					validators: {
+						notEmpty: {
+							message: '手机号码不能为空'
+						},
+						//                      长度
+						stringlength: {
+							min: 11,
+							max: 11,
+							message: '请输入11位手机号码'
+						},
+						//                         基于正则表达是的验证
+						regexp: {
+							regexp: /^1[3|5|8]{1}[0-9]{9}$/,
+							message: '请输入正确的手机号码'
+						}
+					}
+				},
+				//               微信号
+				ad_wx: {
+					message: '微信号非法',
+					validators: {
+						//                  	非空
+						notEmpty: {
+							message: '微信号不能为空'
+						},
+						//                        基于正则表达是的验证
+						regexp: {
+							regexp: /^[a-zA-Z]{1}[-_a-zA-Z0-9]{5,19}$/,
+							message: '微信号由数6-20个字母、数字、下划线或减号组成，以字母开头'
+						}
+					}
+				},
+			
+			}
+		})
+	})
+</script>
+{include file="footer"}

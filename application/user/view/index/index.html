@@ -1,0 +1,475 @@
+{include file="header"}
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/common.css" />
+<link rel="stylesheet" type="text/css" href="__ADMIN_PUBLIC__/static/css/user_index.css" />
+
+
+<div class="vue_box">
+
+	<transition name="fade">	
+		<div class="content info_page" v-show="!is_order">
+		
+			<!--显示时间-->
+			<div id="today">
+				<?=date("Y-m-d") ?>
+				星期{$nowWeek} 第{$schoolWeek}周
+			</div>
+					
+			<h3 id="title">电脑门诊部</h3>
+		
+			<!--可以预约-->
+			<div  class="hideInfo">
+			
+					<div>
+						<!--管理员登录-->
+						<a class="login functionBtn littleBtn btn btn-primary" href="{:url('super/Login/index')}">管理<br/>登陆</a>
+						<!--立即预约-->
+						<button class="btn btn-danger functionBtn" v-if="reserveNum<maxNum && todayStatue==1"  @click="is_order=true">立即<br/>预约</button>					
+						<!--预约须知-->	
+						<a href="" onclick="return false;" data-toggle="modal" data-target="#myModal" class="btn btn-primary functionBtn littleBtn">预约<br/>须知</a>
+						
+					</div>
+			
+				<span v-if="reserveNum==maxNum">
+					<p>预约名额已满，请下次预约</p>
+					<p>预约时间为第{$beginSchoolWeek}-{$endSchoolWeek}周，周{$beginWeek}到周{$endWeek}，{$beginTimeH}-{$endTimeH}</p>
+				</span>
+				
+				<div id="emptyInfo" v-if="user_info[0]==undefined"><p>今天暂未有人预约</p></div>
+				<div id="numBigBox">
+					<div id="numbox">
+						<div class="smallbox rbox" id="rbox">{{reserveNum}}</div>
+						<div class="smallbox sbox">{{maxNum-reserveNum}}</div>
+					</div>
+					<span>已预约 / 剩余名额</span>
+							
+				</div>
+				<form method="post">
+					<div class="queryBox">
+						<input class="form-control" id="problem_input" v-model="queryname" placeholder="输入姓名查询以往预约"></input>
+						<button type="button" class="btn btn-primary" @click="query()" id="find"><img src="__ADMIN_PUBLIC__/static/image/find.png"/></button>
+					</div>
+				</form>
+			</div>
+			<!--查询的预约-->
+			<div v-if="queryInfo!==null" class="hideInfo">				
+				<div class="tablebox" class="row">
+					<div class="tableth tableth1 row">
+						<span class="col-lg-4 col-sm-4 col-xs-4 col-md-4">班级</span>
+						<span class="col-lg-3 col-sm-3 col-xs-3 col-md-3">姓名</span>
+						<span class="col-lg-3 col-sm-3 col-xs-3 col-md-3">维修员</span>
+						<span class="col-lg-2 col-sm-2 col-xs-2 col-md-2">状态</span>
+					</div>
+					<div :class="item.statue==1?'tabletd row finished':'tabletd row'" v-for="(item,index) in queryInfo">			
+						<span class="col-lg-4 col-sm-4 col-xs-4 col-md-4">{{item.classname}}</span>
+						<span class="col-lg-3 col-sm-3 col-xs-3 col-md-3">{{item.name}}</span>
+						<span class="col-lg-3 col-sm-3 col-xs-3 col-md-3">
+							<a data-toggle="modal" :data-target="'#myModal'+index" class="ad_name_btn" >{{item.ad_name}}</a>
+							<!-- 模态框提示 -->
+							<div :id="'myModal'+index" class="modal fade"  tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										<div class="modal-header">
+											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+												<span aria-hidden="true">&times;</span>
+											</button>
+											<h4 class="modal-title" id="myModalLabel">维修员信息</h4>
+										</div>
+										<div class="modal-body">	
+											<div class="modal-body-inner">
+												<p><b>姓名：</b>{{item.ad_name}}</p>
+												<p><b>班级：</b>{{item.ad_classname}}</p>
+												<p><b>电话：</b>{{item.ad_phone}}</p>
+												<p><b>微信：</b>{{item.ad_wx}}</p>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</span>
+						<span class="col-lg-2 col-sm-2 col-xs-2 col-md-2">
+							<img v-if="item.statue==1" src="__ADMIN_PUBLIC__/static/image/finish.png"/>
+							<img v-if="item.statue==0" src="__ADMIN_PUBLIC__/static/image/wait.png"/>
+						</span>		
+					</div>
+				</div>			
+			</div>
+			
+			
+			<!--已预约的名单-->
+			<div v-if="(todayStatue==3&&user_info[0]!==undefined) || (todayStatue==1&&user_info[0]!==undefined)" class="hideInfo">				
+				<div class="tablebox" class="row">
+					<div class="tableth row">
+						<span class="col-lg-4 col-sm-4 col-xs-4 col-md-4">班级</span>
+						<span class="col-lg-3 col-sm-3 col-xs-3 col-md-3">姓名</span>
+						<span class="col-lg-3 col-sm-3 col-xs-3 col-md-3">维修员</span>
+						<span class="col-lg-2 col-sm-2 col-xs-2 col-md-2">状态</span>
+					</div>
+					<div :class="item.statue==1?'tabletd row finished':'tabletd row'" v-for="(item,index) in user_info">			
+						<span class="col-lg-4 col-sm-4 col-xs-4 col-md-4">{{item.classname}}</span>
+						<span class="col-lg-3 col-sm-3 col-xs-3 col-md-3">{{item.name}}</span>
+						<span class="col-lg-3 col-sm-3 col-xs-3 col-md-3">
+							<a data-toggle="modal" :data-target="'#myModal'+index" class="ad_name_btn" >{{item.ad_name}}</a>
+							<!-- 模态框提示 -->
+							<div :id="'myModal'+index" class="modal fade"  tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										<div class="modal-header">
+											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+												<span aria-hidden="true">&times;</span>
+											</button>
+											<h4 class="modal-title" id="myModalLabel">维修员信息</h4>
+										</div>
+										<div class="modal-body">	
+											<div class="modal-body-inner">
+												<p><b>姓名：</b>{{item.ad_name}}</p>
+												<p><b>班级：</b>{{item.ad_classname}}</p>
+												<p><b>电话：</b>{{item.ad_phone}}</p>
+												<p><b>微信：</b>{{item.ad_wx}}</p>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</span>
+						<span class="col-lg-2 col-sm-2 col-xs-2 col-md-2">
+							<img v-if="item.statue==1" src="__ADMIN_PUBLIC__/static/image/finish.png"/>
+							<img v-if="item.statue==0" src="__ADMIN_PUBLIC__/static/image/wait.png"/>
+						</span>		
+					</div>
+				</div>			
+			</div>
+							
+			<!--不在预约范围内-->
+			<div id="" v-if="todayStatue==0 || todayStatue==3" class="hideInfo">
+				<div class="card_box">
+					<div class="title">温馨提示</div>
+					<div class="content">
+						<p>抱歉，现在不在预约时间范围</p>
+						<p>请在第{$beginSchoolWeek}-{$endSchoolWeek}周，周{$beginWeek}到周{$endWeek}</p>
+						<p>{$beginTimeH}-{$endTimeH}进行预约</p>
+						<p>当天预约，当天维修</p>
+						<p>逾期不至，请隔天重新预约</p>
+					</div>
+				</div>
+			</div>	
+				
+	
+			<!--当天暂停预约-->
+			<div id="" v-if="todayStatue==2" class="hideInfo">
+				<div class="card_box">
+					<div class="title">温馨提示</div>
+					<div class="content">
+						<p>抱歉，今天的电脑门诊部义务维修暂停</p>
+						<p>今天已预约的同学，预约失效，请下次预约</p>
+						<p>预约时间为第{$beginSchoolWeek}-{$endSchoolWeek}周，周{$beginWeek}到周{$endWeek}</p>
+						<p>{$beginTimeH}-{$endTimeH}</p>
+						<p>当天预约，当天维修</p>
+						<p>逾期不至，请隔天重新预约</p>
+						<p>如有不便，敬请原谅！</p>
+					</div>
+				</div>
+			</div>
+			
+			<!--常见电脑问题查询、聊天室-->
+			<div class="problem_entrance">
+				<a href="{:url('Problemquery/index')}"  class="entrance">
+					<img class="icon" src="__ADMIN_PUBLIC__/static/image/proin.png"/>
+					<span>常见电脑问题查询</span>
+					
+				</a>
+			
+				<a href="{:url('socket/Chatlogin/chatlogin')}" class="entrance">
+					<img class="icon" src="__ADMIN_PUBLIC__/static/image/chatin.png"/>
+					<span>咨询室</span>
+				</a>
+			</div>
+			
+			<!-- 模态框提示 -->
+			<div class="modal_box">						
+				<div id="myModal" class="modal fade"  tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+					<div class="modal-dialog" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+								<h4 class="modal-title" id="myModalLabel">关于电脑门诊部</h4>
+							</div>
+							<div class="modal-body">	
+								<div class="modal-body-inner">
+									<p><b>简介：</b></p>
+									<p class="describe">电脑门诊部，成立于2015年9月，是计算机科学系团总支旗下的一支志愿维修队伍，也是计算机科学系大力打造的学生特色品牌项目。电脑门诊部自成立以来，始终以为广大师生提供免费、优质的电脑维修服务为宗旨，迄今为止，累计义务维修的电脑数量已达2500台，受到了师生们的一致好评。目前，电脑门诊部共有30名志愿维修人员，每学期第{$beginSchoolWeek}-{$endSchoolWeek}周，周{$beginWeek}到周{$endWeek}，晚上{$sbeginTime}-{$sendTime}，于{$seat}安排维修队员值班，为成功预约的{$maxNum}台电脑进行维修，并且在门诊部Q群提供在线解答问题服务。</p>
+									<p><b>Q群：</b>1群：371264130（已满）  2群：220675900</p>			
+									<p><b>作者：</b>电脑门诊部队长   梁棹文（虎牙）</p>						
+									<div class="wx_box">
+										<img class="wx2" src="__ADMIN_PUBLIC__/static/image/Wechat.jpeg"/>
+										<p><b>欢迎提供建议</b></p>
+									</div>				
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>	
+			</div>
+			
+		</div>	
+	</transition>
+	
+	<!--预约信息表格-->
+	<transition name="fade">	
+		<div v-show="is_order" v-if="todayStatue==1" class="hideInfo ">
+			<div class="order_box ">
+				
+				<!--表单信息填写-->
+				<form method="POST" id="reserveInfo" action="{:url('order')}">
+					<h3>请填写预约需要的信息</h3>
+					<!--姓名-->
+					<div class="form-group">
+						<label class="control-label" for="name">姓名</label>
+						<input class="form-control" placeholder="请输入您的姓名" id="name" name="name"></input>
+					</div>
+					<!--学号-->
+					<div class="form-group">
+						<label class="control-label" for="uid">学号</label>
+						<input class="form-control" placeholder="请输入您的学号" id="uid" name="uid"></input>
+					</div>
+					<!--班级-->
+					<div class="form-group">
+						<label class="control-label" for="classname">班级</label>
+						<input class="form-control" placeholder="请输入您的班级，如：H15软件工程B班" id="classname" name="classname"></input>
+					</div>
+					<!--联系电话-->
+					<div class="form-group">
+						<label class="control-label" for="phone">联系电话</label>
+						<input class="form-control" placeholder="请输入您的联系号码" id="phone" name="phone"></input>
+					</div class="form-group">
+					<!--微信号-->
+					<div class="form-group">
+						<label class="control-label" for="wx">微信号</label>
+						<input class="form-control" placeholder="请输入您的微信号" id="wx" name="wx"></input>
+					</div>
+					<!--电脑故障简述-->
+					<div class="form-group">
+						<label class="control-label" for="describe">电脑故障简述</label>
+						<input class="form-control" placeholder="请简述您的电脑故障" id="describe" name="describe"></input>
+					</div>
+					<!--验证码-->
+					<div class="form-group">
+						<label class="control-label" for="captcha">验证码</label>
+						<input class="form-control" placeholder="请输入正确的验证码" id="captcha" name="captcha"></input>
+						
+					</div>					
+					<!--按钮-->
+					<div class="btn_box">
+						<img :src="captcha_src" @click="change()" class="captcha_box"/>
+						<p class="captcha_tips">（验证码错误可是要重新填写的哦）</p>
+						<button class="btn btn-primary" type="submit">预约</button>
+						<button class="btn btn-danger" @click="is_order=false">返回</button>
+					</div>
+				</form>
+			</div>
+			
+		</div>
+	</transition>
+			
+			
+</div>
+
+<script type="text/javascript">
+	window.onload=function(){
+	$(".hideInfo").show()
+	//Vue
+	$Vue = new Vue({
+		el: ".vue_box",
+		data: {		
+		  	maxNum : {$maxNum}, //最大的预约人数
+			reserveNum: {$reserveNum}, //当天预约的人数
+			user_info: {$reserveList}, //预约列表
+			is_order: false, //是否显示填写预约
+			fields: null, //表单显示的内容
+			todayStatue: {$todayStatue}, //今天是否能预约
+			reserve_Statue: {$reserveStatue}, //预约的状态
+			captcha_src:"{:captcha_src()}",//验证码
+			queryname:"",//查询的名字
+			queryInfo:null,
+		},
+		watch:{
+			queryname:function(){
+				if(this.queryname==""){
+					this.queryInfo=null;
+				}
+			}
+		},
+		created: function() {
+			var rwidth = (this.reserveNum / this.maxNum)*100-1 ;
+			
+			if(rwidth<1){
+				rwidth="2%";
+			}else{
+				rwidth=rwidth+"%"
+			}
+			$("#rbox").width(rwidth);
+		},
+		methods: {
+			//改变验证码
+			change:function(){
+				this.captcha_src += "?code="+Math.random(10000);
+			},
+			query:function(){
+				this.$http.post("{:url('query')}",{
+					queryname:this.queryname,
+				}).then(function(data){
+					if(this.queryname.trim()!==""){
+						if(data.body.length>0){
+						this.queryInfo=data.body;
+						}else{
+							this.queryInfo=null;
+							alert("抱歉，没有查询到相关预约");				
+						}
+					}else{
+						alert("请输入名字进行查询！");	
+					}
+					
+					
+				});	
+			}
+		}
+	})
+	
+	
+		//	表单验证
+		$(function() {
+				
+			$('#reserveInfo').bootstrapValidator({
+				//检验提示　　　　　　
+				message: 'This value is not valid',
+				feedbackIcons: {　　　　　　　　
+					valid: 'glyphicon glyphicon-ok',
+	　　　　　　　　invalid: 'glyphicon glyphicon-remove',
+	　　　　　　　　validating: 'glyphicon glyphicon-refresh'　　　　　　　　
+				},
+				//            字段验证
+				fields: {
+					//                姓名
+					name: {
+						message: '姓名非法',
+						validators: {
+							//                        非空
+							notEmpty: {
+								message: '姓名不能为空'
+							},
+							//                       基于正则表达是的验证
+							regexp: {
+								regexp: /^([\u4e00-\u9fa5]{2,5})$/,
+								message: '姓名为2-5位中文'
+							}
+						}
+					},
+	
+					//                学号
+					uid: {
+						message: '学号非法',
+						validators: {
+							notEmpty: {
+								message: '学号不能为空'
+							},
+							//                        基于正则表达是的验证
+							regexp: {
+								regexp: /^1[0-9]{10}$/,
+								message: '学号为1开头，长度为11位'
+							}
+						}
+					},
+	
+					//                班级
+					classname: {
+					
+						message: '班级非法',
+						validators: {
+							notEmpty: {
+								message: '班级不能为空'
+							},
+							//                        基于正则表达是的验证
+							regexp: {				
+								regexp: /^H1[0-9][\u4e00-\u9fa5]{2,}[a-eA-E]{0,1}班$/,
+								message: '班级格式错误，如H15软件工程B班，H要大写，要写班'
+							},
+							//验证长度
+							stringlength: {
+								min: 5,
+								max: 12,
+								message: '班级名称长度为5-12'
+							},
+						}
+					},
+	
+					//               微信号
+					wx: {
+						message: '微信号非法',
+						validators: {
+							//                  	非空
+							notEmpty: {
+								message: '微信号不能为空'
+							},
+							//                        基于正则表达是的验证
+							regexp: {
+								regexp: /^[a-zA-Z]{1}[-_a-zA-Z0-9]{5,19}$/,
+								message: '微信号由数6-20个字母、数字、下划线或减号组成，以字母开头'
+							}
+						}
+					},
+	
+					//				  手机号码
+					phone: {
+						validators: {
+							notEmpty: {
+								message: '手机号码不能为空'
+							},
+							//                      长度
+							stringlength: {
+								min: 11,
+								max: 11,
+								message: '请输入11位手机号码'
+							},
+							//                         基于正则表达是的验证
+							regexp: {
+								regexp: /^1[3|5|8]{1}[0-9]{9}$/,
+								message: '请输入正确的手机号码'
+							}
+						}
+					},
+	
+					//                电脑问题描述
+					describe: {
+						validators: {
+							//非空
+							notEmpty: {
+								message: '电脑问题描述不能为空'
+							},
+							//长度
+							stringLength: {
+								min: 2,
+								max: 60,
+								message: '电脑问题描述长度必须位于2到60之间'
+							}
+						}
+					},
+					//验证码
+					captcha: {
+						validators: {
+							//非空
+							notEmpty: {
+								message: '验证码不能为空'
+							},
+							
+						}
+					},
+	
+				}
+			})
+	
+		});
+	}
+</script>
+
+{include file="footer"}
